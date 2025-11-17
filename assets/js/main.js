@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCurrentYear();
     initTypingAnimation();
     initScrollEffects();
+    initSkillsSlider();
+    initProjectsSlider();
 });
 
 /* ========================================
@@ -597,4 +599,251 @@ if (DEBUG_MODE) {
     console.log('📱 Ancho de ventana:', window.innerWidth);
     console.log('📊 Stats encontrados:', document.querySelectorAll('.stat-number').length);
     console.log('🎓 Certificaciones:', Object.keys(certificationsData).length);
+}
+
+/* ========================================
+   SKILLS SLIDER
+======================================== */
+function initSkillsSlider() {
+    const slider = document.getElementById('skillsSlider');
+    const container = slider?.querySelector('.skills-container');
+    const prevBtn = document.getElementById('skillsPrev');
+    const nextBtn = document.getElementById('skillsNext');
+    const dotsContainer = document.getElementById('skillsDots');
+    
+    if (!slider || !container) return;
+    
+    const categories = container.querySelectorAll('.skill-category');
+    let currentIndex = 0;
+    let itemsPerView = 4;
+    let startX = 0;
+    let isDragging = false;
+    
+    // Determine items per view based on screen size
+    function updateItemsPerView() {
+        const width = window.innerWidth;
+        if (width <= 480) {
+            itemsPerView = 1;
+        } else if (width <= 768) {
+            itemsPerView = 1;
+        } else if (width <= 1024) {
+            itemsPerView = 2;
+        } else {
+            itemsPerView = 4;
+        }
+        updateSlider();
+    }
+    
+    // Update slider position
+    function updateSlider() {
+        const totalPages = Math.ceil(categories.length / itemsPerView);
+        currentIndex = Math.min(currentIndex, totalPages - 1);
+        
+        const translateX = -(currentIndex * 100);
+        container.style.transform = `translateX(${translateX}%)`;
+        
+        // Update buttons state
+        if (prevBtn && nextBtn) {
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex >= totalPages - 1;
+        }
+        
+        // Update dots
+        updateDots(totalPages);
+    }
+    
+    // Create and update dots
+    function updateDots(totalPages) {
+        if (!dotsContainer) return;
+        
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < totalPages; i++) {
+            const dot = document.createElement('button');
+            dot.className = `slider-dot ${i === currentIndex ? 'active' : ''}`;
+            dot.setAttribute('aria-label', `Ir a página ${i + 1}`);
+            dot.addEventListener('click', () => {
+                currentIndex = i;
+                updateSlider();
+            });
+            dotsContainer.appendChild(dot);
+        }
+    }
+    
+    // Navigation handlers
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateSlider();
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(categories.length / itemsPerView);
+            if (currentIndex < totalPages - 1) {
+                currentIndex++;
+                updateSlider();
+            }
+        });
+    }
+    
+    // Touch events for mobile
+    slider.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+    });
+    
+    slider.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+    });
+    
+    slider.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
+        const totalPages = Math.ceil(categories.length / itemsPerView);
+        
+        if (Math.abs(diff) > 50) {
+            if (diff > 0 && currentIndex < totalPages - 1) {
+                currentIndex++;
+            } else if (diff < 0 && currentIndex > 0) {
+                currentIndex--;
+            }
+            updateSlider();
+        }
+    });
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        const totalPages = Math.ceil(categories.length / itemsPerView);
+        if (e.key === 'ArrowLeft' && currentIndex > 0) {
+            currentIndex--;
+            updateSlider();
+        } else if (e.key === 'ArrowRight' && currentIndex < totalPages - 1) {
+            currentIndex++;
+            updateSlider();
+        }
+    });
+    
+    // Resize handler
+    window.addEventListener('resize', updateItemsPerView);
+    
+    // Initialize
+    updateItemsPerView();
+}
+
+/* ========================================
+   PROJECTS SLIDER (Mobile Only)
+======================================== */
+function initProjectsSlider() {
+    const slider = document.getElementById('projectsSlider');
+    const prevBtn = document.querySelector('.projects-prev');
+    const nextBtn = document.querySelector('.projects-next');
+    const dotsContainer = document.getElementById('projectsDots');
+    
+    if (!slider) return;
+    
+    const projects = slider.querySelectorAll('.project-card');
+    let currentIndex = 0;
+    
+    // Only activate on mobile (≤768px)
+    function checkMobile() {
+        return window.innerWidth <= 768;
+    }
+    
+    // Update slider position
+    function updateSlider() {
+        if (!checkMobile()) return;
+        
+        slider.scrollTo({
+            left: currentIndex * slider.offsetWidth,
+            behavior: 'smooth'
+        });
+        
+        // Update buttons
+        if (prevBtn && nextBtn) {
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex >= projects.length - 1;
+        }
+        
+        // Update dots
+        updateDots();
+    }
+    
+    // Create and update dots
+    function updateDots() {
+        if (!dotsContainer || !checkMobile()) return;
+        
+        dotsContainer.innerHTML = '';
+        projects.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = `slider-dot ${i === currentIndex ? 'active' : ''}`;
+            dot.setAttribute('aria-label', `Ir al proyecto ${i + 1}`);
+            dot.addEventListener('click', () => {
+                currentIndex = i;
+                updateSlider();
+            });
+            dotsContainer.appendChild(dot);
+        });
+    }
+    
+    // Navigation handlers
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateSlider();
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < projects.length - 1) {
+                currentIndex++;
+                updateSlider();
+            }
+        });
+    }
+    
+    // Scroll sync
+    let scrollTimeout;
+    slider.addEventListener('scroll', () => {
+        if (!checkMobile()) return;
+        
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            const newIndex = Math.round(slider.scrollLeft / slider.offsetWidth);
+            if (newIndex !== currentIndex) {
+                currentIndex = newIndex;
+                updateDots();
+                
+                // Update buttons
+                if (prevBtn && nextBtn) {
+                    prevBtn.disabled = currentIndex === 0;
+                    nextBtn.disabled = currentIndex >= projects.length - 1;
+                }
+            }
+        }, 100);
+    });
+    
+    // Initialize if mobile
+    if (checkMobile()) {
+        updateDots();
+        if (prevBtn) prevBtn.disabled = true;
+    }
+    
+    // Resize handler
+    window.addEventListener('resize', () => {
+        if (checkMobile()) {
+            currentIndex = 0;
+            updateSlider();
+        } else {
+            if (dotsContainer) dotsContainer.innerHTML = '';
+        }
+    });
 }
