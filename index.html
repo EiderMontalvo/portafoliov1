@@ -356,9 +356,15 @@
                         </p>
                     </div>
                     
-                    <div class="skills-container">
-                        <!-- Lenguajes -->
-                        <div class="skill-category" data-aos="fade-up">
+                    <div class="skills-slider-wrapper">
+                        <button class="slider-btn slider-prev" id="skillsPrev" aria-label="Ver habilidades anteriores">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="skills-slider" id="skillsSlider">
+                            <div class="skills-container">
+                                <!-- Lenguajes -->
+                                <div class="skill-category" data-aos="fade-up">
                             <div class="category-header">
                                 <div class="category-icon">
                                     <i class="fas fa-code"></i>
@@ -578,7 +584,15 @@
                                 </div>
                             </div>
                         </div>
+                            </div>
+                        </div>
+                        
+                        <button class="slider-btn slider-next" id="skillsNext" aria-label="Ver más habilidades">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
+                    
+                    <div class="slider-dots" id="skillsDots" aria-label="Indicadores de habilidades"></div>
                 </div>
             </section>
 
@@ -594,8 +608,13 @@
                         </p>
                     </div>
                     
-                    <div class="projects-grid">
-                        <!-- Proyecto 1: EstudiaFácil -->
+                    <div class="projects-slider-wrapper">
+                        <button class="slider-btn slider-prev projects-prev" aria-label="Ver proyecto anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="projects-grid" id="projectsSlider">
+                            <!-- Proyecto 1: EstudiaFácil -->
                         <div class="project-card" data-aos="fade-up">
                             <div class="project-image">
                                 <div class="project-placeholder">
@@ -744,7 +763,14 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
+                        
+                        <button class="slider-btn slider-next projects-next" aria-label="Ver siguiente proyecto">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
+                    
+                    <div class="slider-dots projects-dots" id="projectsDots" aria-label="Indicadores de proyectos"></div>
                     
                     <div class="projects-footer" data-aos="fade-up">
                         <p>Explora más proyectos y contribuciones en mi repositorio</p>
@@ -855,57 +881,37 @@
         <!-- Footer -->
         <footer class="footer" role="contentinfo">
             <div class="container">
-                <div class="footer-content">
-                    <div class="footer-brand">
+                <div class="footer-content-compact">
+                    <div class="footer-brand-compact">
                         <a href="#home" class="footer-logo">
                             <span class="logo-icon">&lt;/&gt;</span>
                             <span class="logo-text">Eider<span class="logo-accent">Dev</span></span>
                         </a>
-                        <p class="footer-tagline">
-                            Construyendo soluciones con código limpio y dedicación
-                        </p>
                     </div>
                     
-                    <div class="footer-links">
-                        <div class="footer-column">
-                            <h4>Navegación</h4>
-                            <ul>
-                                <li><a href="#home">Inicio</a></li>
-                                <li><a href="#about">Sobre mí</a></li>
-                                <li><a href="#skills">Habilidades</a></li>
-                                <li><a href="#projects">Proyectos</a></li>
-                                <li><a href="#contact">Contacto</a></li>
-                            </ul>
-                        </div>
-                        
-                        <div class="footer-column">
-                            <h4>Recursos</h4>
-                            <ul>
-                                <li><a href="assets/files/cv-eider-montalvo.pdf" download>Descargar CV</a></li>
-                                <li><a href="https://github.com/EiderMontalvo" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-                                <li><a href="https://www.linkedin.com/in/eider-ivan-sanchez-montalvo" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
-                                <li><a href="mailto:sanchezmontalvoeider@gmail.com">Email</a></li>
-                            </ul>
-                        </div>
-                        
-                        <div class="footer-column">
-                            <h4>Contacto</h4>
-                            <ul>
-                                <li><a href="mailto:sanchezmontalvoeider@gmail.com">sanchezmontalvoeider@gmail.com</a></li>
-                                <li><a href="tel:+51946148236">+51 946 148 236</a></li>
-                                <li>Perú</li>
-                            </ul>
-                        </div>
+                    <nav class="footer-nav" aria-label="Enlaces del footer">
+                        <a href="#home">Inicio</a>
+                        <a href="#about">Sobre mí</a>
+                        <a href="#skills">Habilidades</a>
+                        <a href="#projects">Proyectos</a>
+                        <a href="#contact">Contacto</a>
+                    </nav>
+                    
+                    <div class="footer-social">
+                        <a href="https://github.com/EiderMontalvo" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/eider-ivan-sanchez-montalvo" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="mailto:sanchezmontalvoeider@gmail.com" aria-label="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
                     </div>
                 </div>
                 
-                <div class="footer-bottom">
-                    <p class="copyright">
-                        &copy; <span id="currentYear">2025</span> Eider Sánchez Montalvo. Todos los derechos reservados.
-                    </p>
-                    <p class="made-with">
-                        Hecho con <i class="fas fa-heart"></i> y <i class="fas fa-coffee"></i>
-                    </p>
+                <div class="footer-bottom-compact">
+                    <p>&copy; <span id="currentYear">2025</span> Eider Sánchez Montalvo</p>
                 </div>
             </div>
         </footer>

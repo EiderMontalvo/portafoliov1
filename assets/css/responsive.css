@@ -105,10 +105,11 @@
         margin-top: var(--spacing-md);
     }
 
-    /* Hero Section */
+    /* Hero Section - Fix header overlap */
     .hero-section {
         min-height: auto;
-        padding: var(--spacing-3xl) 0;
+        padding-top: calc(var(--spacing-3xl) + 60px);
+        padding-bottom: var(--spacing-3xl);
     }
 
     .hero-greeting {
@@ -164,19 +165,55 @@
         font-size: 0.75rem;
     }
 
-    /* Skills */
+    /* Skills Slider - 2 items on tablet */
+    .skills-slider-wrapper {
+        padding: 0 var(--spacing-2xl);
+    }
+    
     .skills-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .skill-category {
         padding: var(--spacing-lg);
     }
+    
+    .slider-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
 
-    /* Projects */
+    /* Projects Slider - Activate on mobile */
+    .projects-slider-wrapper {
+        display: block;
+        position: relative;
+        padding: 0 var(--spacing-2xl);
+    }
+    
     .projects-grid {
-        grid-template-columns: 1fr;
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
         gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    
+    .projects-grid::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .project-card {
+        flex: 0 0 100%;
+        scroll-snap-align: start;
+        max-width: 100%;
+    }
+    
+    .projects-dots {
+        display: flex;
     }
 
     /* Contact */
@@ -184,22 +221,18 @@
         grid-template-columns: 1fr;
     }
 
-    /* Footer */
-    .footer-content {
-        grid-template-columns: 1fr;
+    /* Footer - Stack vertically */
+    .footer-content-compact {
+        flex-direction: column;
+        align-items: center;
         text-align: center;
+        gap: var(--spacing-md);
     }
-
-    .footer-brand {
-        margin: 0 auto;
-    }
-
-    .footer-column {
-        text-align: center;
-    }
-
-    .footer-column a:hover {
-        padding-left: 0;
+    
+    .footer-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--spacing-md);
     }
 
     /* Modal */
@@ -249,7 +282,11 @@
         font-size: var(--font-size-sm);
     }
 
-    /* Hero */
+    /* Hero - Extra padding for small mobile */
+    .hero-section {
+        padding-top: calc(var(--spacing-2xl) + 70px);
+    }
+    
     .hero-image-wrapper {
         max-width: 250px;
     }
@@ -284,7 +321,21 @@
         font-size: 0.7rem;
     }
 
-    /* Skills */
+    /* Skills Slider - 1 item on mobile */
+    .skills-slider-wrapper {
+        padding: 0 var(--spacing-xl);
+    }
+    
+    .skills-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .slider-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
     .category-icon {
         width: 50px;
         height: 50px;
@@ -336,13 +387,25 @@
         font-size: 1.25rem;
     }
 
-    /* Footer */
+    /* Footer - Compact on mobile */
     .footer {
-        padding: var(--spacing-2xl) 0 var(--spacing-md);
+        padding: var(--spacing-md) 0;
+        max-height: none;
     }
 
     .footer-logo {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
+    }
+    
+    .footer-nav {
+        font-size: var(--font-size-xs);
+        gap: var(--spacing-sm);
+    }
+    
+    .footer-social a {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
     }
 
     /* Modal */
