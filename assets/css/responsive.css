@@ -27,7 +27,11 @@
         font-size: var(--font-size-xs);
     }
 
-    .card-1, .card-2, .card-3 {
+    .card-1,
+    .card-2,
+    .card-3,
+    .card-4,
+    .card-5 {
         animation-duration: 4s;
     }
 
@@ -61,8 +65,15 @@
     }
 
     /* Navegación móvil */
+    .navbar {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
     .nav-toggle {
         display: flex;
+        order: 3;
     }
 
     .nav-menu {
@@ -102,7 +113,10 @@
     }
 
     .nav-cta {
-        margin-top: var(--spacing-md);
+        display: flex;
+        order: 2;
+        margin-top: 0;
+        margin-left: auto;
     }
 
     /* Hero Section - Fix header overlap */
@@ -142,9 +156,9 @@
         max-width: 300px;
     }
 
-    .floating-card {
+    /*.floating-card {
         display: none;
-    }
+    }*/
 
     .scroll-down {
         display: none;
@@ -169,7 +183,7 @@
     .skills-slider-wrapper {
         padding: 0 var(--spacing-2xl);
     }
-    
+
     .skills-container {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -177,7 +191,7 @@
     .skill-category {
         padding: var(--spacing-lg);
     }
-    
+
     .slider-btn {
         width: 45px;
         height: 45px;
@@ -190,7 +204,7 @@
         position: relative;
         padding: 0 var(--spacing-2xl);
     }
-    
+
     .projects-grid {
         display: flex;
         overflow-x: auto;
@@ -201,17 +215,17 @@
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
-    
+
     .projects-grid::-webkit-scrollbar {
         display: none;
     }
-    
+
     .project-card {
         flex: 0 0 100%;
         scroll-snap-align: start;
         max-width: 100%;
     }
-    
+
     .projects-dots {
         display: flex;
     }
@@ -228,7 +242,7 @@
         text-align: center;
         gap: var(--spacing-md);
     }
-    
+
     .footer-nav {
         flex-wrap: wrap;
         justify-content: center;
@@ -272,9 +286,17 @@
     }
 
     /* Tipografía */
-    h1 { font-size: var(--font-size-3xl); }
-    h2 { font-size: var(--font-size-2xl); }
-    h3 { font-size: var(--font-size-xl); }
+    h1 {
+        font-size: var(--font-size-3xl);
+    }
+
+    h2 {
+        font-size: var(--font-size-2xl);
+    }
+
+    h3 {
+        font-size: var(--font-size-xl);
+    }
 
     /* Botones */
     .btn {
@@ -286,7 +308,7 @@
     .hero-section {
         padding-top: calc(var(--spacing-2xl) + 70px);
     }
-    
+
     .hero-image-wrapper {
         max-width: 250px;
     }
@@ -325,17 +347,17 @@
     .skills-slider-wrapper {
         padding: 0 var(--spacing-xl);
     }
-    
+
     .skills-container {
         grid-template-columns: 1fr;
     }
-    
+
     .slider-btn {
         width: 40px;
         height: 40px;
         font-size: 1rem;
     }
-    
+
     .category-icon {
         width: 50px;
         height: 50px;
@@ -396,12 +418,12 @@
     .footer-logo {
         font-size: 1.125rem;
     }
-    
+
     .footer-nav {
         font-size: var(--font-size-xs);
         gap: var(--spacing-sm);
     }
-    
+
     .footer-social a {
         width: 35px;
         height: 35px;
@@ -454,6 +476,7 @@
    PRINT STYLES
 ======================================== */
 @media print {
+
     .header,
     .nav-toggle,
     .hero-actions,
@@ -505,6 +528,7 @@
    REDUCED MOTION
 ======================================== */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -512,5 +536,52 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+}
+
+/* ========================================
+   RESPONSIVE CORRECTIONS
+======================================== */
+@media (max-width: 1024px) {
+    .about-content {
+        grid-template-columns: 1fr;
+    }
+
+    .skills-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .skill-category {
+        padding: var(--spacing-md);
+    }
+
+    .contact-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .cert-item span {
+        white-space: normal;
+    }
+
+    .code-body {
+        font-size: 0.7rem;
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .skill-tag {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    .contact-card {
+        padding: var(--spacing-lg) var(--spacing-md);
     }
 }

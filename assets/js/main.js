@@ -1,15 +1,20 @@
-/* ========================================
-   PORTFOLIO - MAIN JAVASCRIPT
-   Author: Eider Sánchez Montalvo
-   Year: 2025
-======================================== */
-
 'use strict';
 
 /* ========================================
-   CONFIGURACIÓN DE CERTIFICACIONES
+   CONFIGURACIÓN
 ======================================== */
-const certificationsData = {
+const CONFIG = {
+    DEBUG_MODE: false,
+    SCROLL_OFFSET: 100,
+    NOTIFICATION_DURATION: 3000,
+    TYPING_SPEED: {
+        type: 100,
+        delete: 50,
+        pause: 2000
+    }
+};
+
+const CERTIFICATIONS = {
     'mtpe-backend': {
         title: 'Certificado Back-End Development (Nivel Básico)',
         institution: 'Ministerio de Trabajo y Promoción del Empleo (MTPE)',
@@ -28,7 +33,7 @@ const certificationsData = {
         title: 'Desarrollo Personal G9',
         institution: 'Oracle Next Education (Alura & Oracle)',
         date: '2025',
-        image: 'assets/images/certifications/oracle-dev.jpg',
+        image: 'assets/images/certifications/desarrollopersonal.jpg',
         description: 'Certificación en desarrollo profesional y soft skills del programa ONE, cubriendo metodologías ágiles, trabajo en equipo, comunicación efectiva y gestión de proyectos.'
     },
     'cisco-python': {
@@ -41,20 +46,29 @@ const certificationsData = {
 };
 
 /* ========================================
-   DOM CONTENT LOADED
+   INICIALIZACIÓN
 ======================================== */
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar todos los componentes
+function initApp() {
     initNavigation();
     initCertifications();
-    initAnimations();
     initBackToTop();
-    updateCurrentYear();
     initTypingAnimation();
     initScrollEffects();
-    initSkillsSlider();
-    initProjectsSlider();
-});
+    initScrollIndicators();
+    initAutoScroll();
+    updateCurrentYear();
+    initYapaCountdown();
+
+    if (CONFIG.DEBUG_MODE) {
+        console.log('Portfolio inicializado');
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
 /* ========================================
    NAVEGACIÓN
@@ -66,24 +80,24 @@ function initNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('section[id]');
 
-    // Navegación sticky y scroll effects
+    if (!header) return;
+
+    // Scroll effects
     let lastScroll = 0;
-    
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
 
-        // Header sticky con efecto al scroll
-        if (currentScroll > 100) {
+        // Header sticky
+        if (currentScroll > CONFIG.SCROLL_OFFSET) {
             header.classList.add('scrolled');
         } else {
             header.classList.remove('scrolled');
         }
 
-        // Active nav links según la sección visible
+        // Active nav links
         let current = '';
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
             if (currentScroll >= (sectionTop - 200)) {
                 current = section.getAttribute('id');
             }
@@ -99,53 +113,42 @@ function initNavigation() {
         lastScroll = currentScroll;
     });
 
-    // Menú móvil toggle
-    if (navToggle) {
+    // Mobile menu toggle
+    if (navToggle && navMenu) {
+        const toggleMenu = (show) => {
+            navMenu.classList.toggle('active', show);
+            navToggle.classList.toggle('active', show);
+            navToggle.setAttribute('aria-expanded', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+        };
+
         navToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            navToggle.classList.toggle('active');
-            
-            const expanded = navToggle.getAttribute('aria-expanded') === 'true';
-            navToggle.setAttribute('aria-expanded', !expanded);
-            
-            // Prevenir scroll cuando el menú está abierto
-            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+            toggleMenu(!navMenu.classList.contains('active'));
         });
 
-        // Cerrar menú al hacer click en un link
+        // Close menu on link click
         navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
-                navToggle.classList.remove('active');
-                navToggle.setAttribute('aria-expanded', 'false');
-                document.body.style.overflow = '';
-            });
+            link.addEventListener('click', () => toggleMenu(false));
         });
 
-        // Cerrar menú al hacer click fuera
+        // Close menu on outside click
         document.addEventListener('click', (e) => {
             if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                navMenu.classList.remove('active');
-                navToggle.classList.remove('active');
-                navToggle.setAttribute('aria-expanded', 'false');
-                document.body.style.overflow = '';
+                toggleMenu(false);
             }
         });
     }
 
-    // Scroll suave para todos los enlaces con ancla
+    // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
+        anchor.addEventListener('click', function (e) {
             const href = this.getAttribute('href');
-            
             if (href !== '#' && href.length > 1) {
                 e.preventDefault();
                 const target = document.querySelector(href);
-                
                 if (target) {
                     const headerHeight = header.offsetHeight;
                     const targetPosition = target.offsetTop - headerHeight;
-                    
                     window.scrollTo({
                         top: targetPosition,
                         behavior: 'smooth'
@@ -156,196 +159,128 @@ function initNavigation() {
     });
 }
 
-/* ========================================
-   MODAL DE CERTIFICACIONES
-======================================== */
+//Modal de certificaciones
 function initCertifications() {
     const certItems = document.querySelectorAll('.cert-item');
-    const certModal = document.getElementById('certModal');
-    const certModalOverlay = document.getElementById('certModalOverlay');
-    const certModalClose = document.getElementById('certModalClose');
-    const certImage = document.getElementById('certImage');
-    const certModalTitle = document.getElementById('certModalTitle');
-    const certDescription = document.getElementById('certDescription');
-    const certDate = document.getElementById('certDate');
+    const modal = document.getElementById('certModal');
+    const overlay = document.getElementById('certModalOverlay');
+    const closeBtn = document.getElementById('certModalClose');
 
-    if (!certModal) return;
+    if (!modal) return;
 
-    // Abrir modal al hacer click en certificación
+    const elements = {
+        image: document.getElementById('certImage'),
+        title: document.getElementById('certModalTitle'),
+        description: document.getElementById('certDescription'),
+        date: document.getElementById('certDate')
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    };
+
+    const openModal = (certData) => {
+        // Actualizar contenido de texto inmediatamente
+        elements.title.textContent = certData.title;
+        elements.description.textContent = certData.description;
+        elements.date.textContent = `${certData.institution} - ${certData.date}`;
+        
+        // Ocultar imagen mientras carga
+        elements.image.style.opacity = '0';
+        
+        // Abrir modal
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Precargar imagen antes de mostrarla
+        const img = new Image();
+        img.onload = function() {
+            elements.image.src = certData.image;
+            elements.image.alt = certData.title;
+            elements.image.style.opacity = '1';
+        };
+        img.onerror = function () {
+            elements.image.style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'cert-image-placeholder';
+            placeholder.innerHTML = '<i class="fas fa-certificate"></i><p>Imagen no disponible</p>';
+            elements.image.parentNode.appendChild(placeholder);
+        };
+        img.src = certData.image;
+    };
+
+    // Event listeners
     certItems.forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
             const certId = this.getAttribute('data-cert');
-            const certData = certificationsData[certId];
-
-            if (certData) {
-                // Actualizar contenido del modal
-                certModalTitle.textContent = certData.title;
-                certImage.src = certData.image;
-                certImage.alt = certData.title;
-                certDescription.textContent = certData.description;
-                certDate.textContent = `${certData.institution} - ${certData.date}`;
-
-                // Mostrar modal
-                certModal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-
-                // Agregar evento de carga de imagen
-                certImage.onerror = function() {
-                    this.style.display = 'none';
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'cert-image-placeholder';
-                    placeholder.innerHTML = '<i class="fas fa-certificate"></i><p>Imagen no disponible</p>';
-                    this.parentNode.appendChild(placeholder);
-                };
-            }
+            const certData = CERTIFICATIONS[certId];
+            if (certData) openModal(certData);
         });
     });
 
-    // Función para cerrar modal
-    function closeModal() {
-        certModal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (overlay) overlay.addEventListener('click', closeModal);
 
-    // Cerrar modal con botón X
-    if (certModalClose) {
-        certModalClose.addEventListener('click', closeModal);
-    }
-
-    // Cerrar modal al hacer click en el overlay
-    if (certModalOverlay) {
-        certModalOverlay.addEventListener('click', closeModal);
-    }
-
-    // Cerrar modal con tecla ESC
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && certModal.classList.contains('active')) {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeModal();
         }
     });
 }
 
 /* ========================================
-   ANIMACIÓN DE NÚMEROS (STATS)
-======================================== */
-function initAnimations() {
-    const statNumbers = document.querySelectorAll('.stat-number');
-    
-    if (statNumbers.length === 0) return;
-
-    const animateNumber = (element) => {
-        const target = parseInt(element.getAttribute('data-count'));
-        const duration = 2000;
-        const increment = target / (duration / 16);
-        let current = 0;
-
-        const updateNumber = () => {
-            current += increment;
-            if (current < target) {
-                element.textContent = Math.floor(current);
-                requestAnimationFrame(updateNumber);
-            } else {
-                // Agregar el "+" para números mayores a 1
-                element.textContent = target + (target > 1 ? '+' : '');
-            }
-        };
-        
-        updateNumber();
-    };
-
-    // Intersection Observer para animar cuando sea visible
-    const statsObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const statNumber = entry.target.querySelector('.stat-number');
-                if (statNumber && !statNumber.classList.contains('animated')) {
-                    statNumber.classList.add('animated');
-                    animateNumber(statNumber);
-                }
-                statsObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    // Observar todas las tarjetas de stats
-    document.querySelectorAll('.stat-card').forEach(card => {
-        statsObserver.observe(card);
-    });
-}
-
-/* ========================================
-   BOTÓN BACK TO TOP
+   BACK TO TOP
 ======================================== */
 function initBackToTop() {
-    const backToTop = document.getElementById('backToTop');
-    
-    if (!backToTop) return;
+    const btn = document.getElementById('backToTop');
+    if (!btn) return;
 
     window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
-            backToTop.classList.add('visible');
-        } else {
-            backToTop.classList.remove('visible');
-        }
+        btn.classList.toggle('visible', window.pageYOffset > 300);
     });
 
-    backToTop.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+    btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
 
 /* ========================================
-   ACTUALIZAR AÑO ACTUAL
-======================================== */
-function updateCurrentYear() {
-    const currentYearSpan = document.getElementById('currentYear');
-    if (currentYearSpan) {
-        currentYearSpan.textContent = new Date().getFullYear();
-    }
-}
-
-/* ========================================
-   ANIMACIÓN DE TYPING
+   TYPING ANIMATION
 ======================================== */
 function initTypingAnimation() {
-    const typingElement = document.querySelector('.typing-animation');
-    
-    if (!typingElement) return;
+    const element = document.querySelector('.typing-animation');
+    if (!element) return;
 
     const words = [
         'Desarrollador de Software Junior',
         'Backend Developer',
-        'Estudiante de Ingeniería',
+        'Aspiro a Full Stack',
         'Tech Enthusiast'
     ];
-    
+
     let wordIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
-    let typingSpeed = 100;
+    let typingSpeed = CONFIG.TYPING_SPEED.type;
 
     function type() {
         const currentWord = words[wordIndex];
-        
+
         if (isDeleting) {
-            typingElement.textContent = currentWord.substring(0, charIndex - 1);
+            element.textContent = currentWord.substring(0, charIndex - 1);
             charIndex--;
-            typingSpeed = 50;
+            typingSpeed = CONFIG.TYPING_SPEED.delete;
         } else {
-            typingElement.textContent = currentWord.substring(0, charIndex + 1);
+            element.textContent = currentWord.substring(0, charIndex + 1);
             charIndex++;
-            typingSpeed = 100;
+            typingSpeed = CONFIG.TYPING_SPEED.type;
         }
 
         if (!isDeleting && charIndex === currentWord.length) {
-            // Palabra completa, esperar antes de borrar
-            typingSpeed = 2000;
+            typingSpeed = CONFIG.TYPING_SPEED.pause;
             isDeleting = true;
         } else if (isDeleting && charIndex === 0) {
-            // Palabra borrada completamente
             isDeleting = false;
             wordIndex = (wordIndex + 1) % words.length;
             typingSpeed = 500;
@@ -354,126 +289,148 @@ function initTypingAnimation() {
         setTimeout(type, typingSpeed);
     }
 
-    // Iniciar la animación
     type();
 }
 
 /* ========================================
-   EFECTOS DE SCROLL (AOS-like)
+   SCROLL EFFECTS (AOS-like)
 ======================================== */
 function initScrollEffects() {
-    const elementsToAnimate = document.querySelectorAll('[data-aos]');
-    
-    if (elementsToAnimate.length === 0) return;
+    const elements = document.querySelectorAll('[data-aos]');
+    if (elements.length === 0) return;
 
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const scrollObserver = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('aos-animate');
-                scrollObserver.unobserve(entry.target);
+                observer.unobserve(entry.target);
             }
         });
-    }, observerOptions);
-
-    elementsToAnimate.forEach(element => {
-        element.style.opacity = '0';
-        element.style.transform = 'translateY(30px)';
-        element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        
-        scrollObserver.observe(element);
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
     });
 
-    // Agregar clase cuando se anima
+    // Add CSS
     const style = document.createElement('style');
     style.textContent = `
+        [data-aos] {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
         .aos-animate {
             opacity: 1 !important;
             transform: translateY(0) !important;
         }
     `;
     document.head.appendChild(style);
+
+    elements.forEach(element => observer.observe(element));
 }
 
 /* ========================================
-   LAZY LOADING DE IMÁGENES
+   SCROLL INDICATORS
 ======================================== */
-function initLazyLoading() {
-    const images = document.querySelectorAll('img[loading="lazy"]');
-    
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src || img.src;
-                    img.classList.add('loaded');
-                    imageObserver.unobserve(img);
-                }
+function initScrollIndicators() {
+    // Skills scroll dots
+    const skillsGrid = document.querySelector('.skills-grid');
+    const skillsDots = document.querySelectorAll('.skills-scroll-wrapper .scroll-dot');
+
+    if (skillsGrid && skillsDots.length > 0) {
+        skillsGrid.addEventListener('scroll', () => {
+            const scrollPercentage = (skillsGrid.scrollLeft / (skillsGrid.scrollWidth - skillsGrid.clientWidth)) * 100;
+            const activeIndex = Math.round((scrollPercentage / 100) * (skillsDots.length - 1));
+
+            skillsDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === activeIndex);
             });
         });
-
-        images.forEach(img => imageObserver.observe(img));
     }
-}
 
-/* ========================================
-   PRELOADER (Opcional)
-======================================== */
-function initPreloader() {
-    const preloader = document.getElementById('preloader');
-    
-    if (preloader) {
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                preloader.style.opacity = '0';
-                setTimeout(() => {
-                    preloader.style.display = 'none';
-                }, 300);
-            }, 500);
+    // Projects scroll dots
+    const projectsGrid = document.querySelector('.projects-grid');
+    const projectsDots = document.querySelectorAll('.projects-scroll-container .scroll-dot');
+
+    if (projectsGrid && projectsDots.length > 0) {
+        projectsGrid.addEventListener('scroll', () => {
+            const scrollPercentage = (projectsGrid.scrollLeft / (projectsGrid.scrollWidth - projectsGrid.clientWidth)) * 100;
+            const activeIndex = Math.round((scrollPercentage / 100) * (projectsDots.length - 1));
+
+            projectsDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === activeIndex);
+            });
         });
     }
 }
 
 /* ========================================
-   DETECCIÓN DE SCROLL DIRECTION
+   UTILIDADES
 ======================================== */
-let lastScrollTop = 0;
-
-function detectScrollDirection() {
-    const header = document.getElementById('header');
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-        // Scrolling down
-        header.style.transform = 'translateY(-100%)';
-    } else {
-        // Scrolling up
-        header.style.transform = 'translateY(0)';
+function updateCurrentYear() {
+    const yearElement = document.getElementById('currentYear');
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
     }
-    
-    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 }
 
-// Opcional: descomentar si quieres ocultar el header al hacer scroll down
-// window.addEventListener('scroll', detectScrollDirection);
+// Contador para proyecto Yapa
+function initYapaCountdown() {
+    const timerElement = document.getElementById('yapa-countdown-timer');
+    if (!timerElement) return;
+
+    // Lanzamiento en 3 días (Ajustado al 1 de Junio 2026)
+    const launchDate = new Date('2026-06-01T12:00:00').getTime();
+
+    function updateTimer() {
+        const now = new Date().getTime();
+        const distance = launchDate - now;
+
+        if (distance < 0) {
+            timerElement.innerHTML = "¡Ya disponible!";
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        timerElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    updateTimer();
+    setInterval(updateTimer, 1000);
+}
+
+// Detectar navegación por teclado
+function detectKeyboardNavigation() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            document.body.classList.add('keyboard-navigation');
+        }
+    });
+
+    document.addEventListener('mousedown', () => {
+        document.body.classList.remove('keyboard-navigation');
+    });
+}
+
+detectKeyboardNavigation();
 
 /* ========================================
-   MANEJO DE ERRORES GLOBAL
+   MANEJO DE ERRORES
 ======================================== */
-window.addEventListener('error', function(e) {
-    console.error('Error detectado:', e.message);
-    // Aquí podrías agregar un sistema de logging o notificaciones
+window.addEventListener('error', (e) => {
+    if (CONFIG.DEBUG_MODE) {
+        console.error('Error:', e.message);
+    }
 });
 
 /* ========================================
    PERFORMANCE MONITORING
 ======================================== */
-if ('performance' in window) {
+if (CONFIG.DEBUG_MODE && 'performance' in window) {
     window.addEventListener('load', () => {
         const perfData = window.performance.timing;
         const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
@@ -481,369 +438,38 @@ if ('performance' in window) {
     });
 }
 
-/* ========================================
-   UTILIDADES ADICIONALES
-======================================== */
+function initAutoScroll() {
+    if (window.innerWidth > 768) return;
 
-// Detectar modo de navegación (teclado vs mouse)
-function detectNavigationMode() {
-    let usingKeyboard = false;
+    const skillsGrid = document.querySelector('.skills-grid');
+    const projectsGrid = document.querySelector('.projects-grid');
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            usingKeyboard = true;
-            document.body.classList.add('keyboard-navigation');
-        }
-    });
+    function autoScroll(container, speed = 3000) {
+        if (!container) return;
 
-    document.addEventListener('mousedown', () => {
-        usingKeyboard = false;
-        document.body.classList.remove('keyboard-navigation');
-    });
-}
+        let scrollAmount = 0;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        let direction = 1;
 
-detectNavigationMode();
+        const scroll = setInterval(() => {
+            if (scrollAmount >= maxScroll) {
+                direction = -1;
+            } else if (scrollAmount <= 0) {
+                direction = 1;
+            }
 
-// Copiar email al clipboard (función de utilidad)
-function copyToClipboard(text) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            showNotification('Email copiado al portapapeles');
-        }).catch(err => {
-            console.error('Error al copiar:', err);
-        });
-    } else {
-        // Fallback para navegadores antiguos
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            showNotification('Email copiado al portapapeles');
-        } catch (err) {
-            console.error('Error al copiar:', err);
-        }
-        document.body.removeChild(textArea);
-    }
-}
-
-// Mostrar notificación temporal
-function showNotification(message, duration = 3000) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, duration);
-}
-
-// Agregar animaciones CSS para notificaciones
-const notificationStyles = document.createElement('style');
-notificationStyles.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(notificationStyles);
-
-/* ========================================
-   EXPORTAR FUNCIONES (si es necesario)
-======================================== */
-// Si usas módulos ES6, puedes exportar funciones aquí
-// export { copyToClipboard, showNotification };
-
-/* ========================================
-   DEBUG MODE (Solo desarrollo)
-======================================== */
-const DEBUG_MODE = false; // Cambiar a false en producción
-
-if (DEBUG_MODE) {
-    console.log('🚀 Portfolio inicializado');
-    console.log('📱 Ancho de ventana:', window.innerWidth);
-    console.log('📊 Stats encontrados:', document.querySelectorAll('.stat-number').length);
-    console.log('🎓 Certificaciones:', Object.keys(certificationsData).length);
-}
-
-/* ========================================
-   SKILLS SLIDER
-======================================== */
-function initSkillsSlider() {
-    const slider = document.getElementById('skillsSlider');
-    const container = slider?.querySelector('.skills-container');
-    const prevBtn = document.getElementById('skillsPrev');
-    const nextBtn = document.getElementById('skillsNext');
-    const dotsContainer = document.getElementById('skillsDots');
-    
-    if (!slider || !container) return;
-    
-    const categories = container.querySelectorAll('.skill-category');
-    let currentIndex = 0;
-    let itemsPerView = 4;
-    let startX = 0;
-    let isDragging = false;
-    
-    // Determine items per view based on screen size
-    function updateItemsPerView() {
-        const width = window.innerWidth;
-        if (width <= 480) {
-            itemsPerView = 1;
-        } else if (width <= 768) {
-            itemsPerView = 1;
-        } else if (width <= 1024) {
-            itemsPerView = 2;
-        } else {
-            itemsPerView = 4;
-        }
-        updateSlider();
-    }
-    
-    // Update slider position
-    function updateSlider() {
-        const totalPages = Math.ceil(categories.length / itemsPerView);
-        currentIndex = Math.min(currentIndex, totalPages - 1);
-        
-        const translateX = -(currentIndex * 100);
-        container.style.transform = `translateX(${translateX}%)`;
-        
-        // Update buttons state
-        if (prevBtn && nextBtn) {
-            prevBtn.disabled = currentIndex === 0;
-            nextBtn.disabled = currentIndex >= totalPages - 1;
-        }
-        
-        // Update dots
-        updateDots(totalPages);
-    }
-    
-    // Create and update dots
-    function updateDots(totalPages) {
-        if (!dotsContainer) return;
-        
-        dotsContainer.innerHTML = '';
-        for (let i = 0; i < totalPages; i++) {
-            const dot = document.createElement('button');
-            dot.className = `slider-dot ${i === currentIndex ? 'active' : ''}`;
-            dot.setAttribute('aria-label', `Ir a página ${i + 1}`);
-            dot.addEventListener('click', () => {
-                currentIndex = i;
-                updateSlider();
+            scrollAmount += direction * (container.clientWidth * 0.85);
+            container.scrollTo({
+                left: scrollAmount,
+                behavior: 'smooth'
             });
-            dotsContainer.appendChild(dot);
-        }
-    }
-    
-    // Navigation handlers
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateSlider();
-            }
-        });
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            const totalPages = Math.ceil(categories.length / itemsPerView);
-            if (currentIndex < totalPages - 1) {
-                currentIndex++;
-                updateSlider();
-            }
-        });
-    }
-    
-    // Touch events for mobile
-    slider.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isDragging = true;
-    });
-    
-    slider.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-    });
-    
-    slider.addEventListener('touchend', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const endX = e.changedTouches[0].clientX;
-        const diff = startX - endX;
-        const totalPages = Math.ceil(categories.length / itemsPerView);
-        
-        if (Math.abs(diff) > 50) {
-            if (diff > 0 && currentIndex < totalPages - 1) {
-                currentIndex++;
-            } else if (diff < 0 && currentIndex > 0) {
-                currentIndex--;
-            }
-            updateSlider();
-        }
-    });
-    
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-        const totalPages = Math.ceil(categories.length / itemsPerView);
-        if (e.key === 'ArrowLeft' && currentIndex > 0) {
-            currentIndex--;
-            updateSlider();
-        } else if (e.key === 'ArrowRight' && currentIndex < totalPages - 1) {
-            currentIndex++;
-            updateSlider();
-        }
-    });
-    
-    // Resize handler
-    window.addEventListener('resize', updateItemsPerView);
-    
-    // Initialize
-    updateItemsPerView();
-}
+        }, speed);
 
-/* ========================================
-   PROJECTS SLIDER (Mobile Only)
-======================================== */
-function initProjectsSlider() {
-    const slider = document.getElementById('projectsSlider');
-    const prevBtn = document.querySelector('.projects-prev');
-    const nextBtn = document.querySelector('.projects-next');
-    const dotsContainer = document.getElementById('projectsDots');
-    
-    if (!slider) return;
-    
-    const projects = slider.querySelectorAll('.project-card');
-    let currentIndex = 0;
-    
-    // Only activate on mobile (≤768px)
-    function checkMobile() {
-        return window.innerWidth <= 768;
+        // Pausar al interactuar
+        container.addEventListener('touchstart', () => clearInterval(scroll));
+        container.addEventListener('mousedown', () => clearInterval(scroll));
     }
-    
-    // Update slider position
-    function updateSlider() {
-        if (!checkMobile()) return;
-        
-        slider.scrollTo({
-            left: currentIndex * slider.offsetWidth,
-            behavior: 'smooth'
-        });
-        
-        // Update buttons
-        if (prevBtn && nextBtn) {
-            prevBtn.disabled = currentIndex === 0;
-            nextBtn.disabled = currentIndex >= projects.length - 1;
-        }
-        
-        // Update dots
-        updateDots();
-    }
-    
-    // Create and update dots
-    function updateDots() {
-        if (!dotsContainer || !checkMobile()) return;
-        
-        dotsContainer.innerHTML = '';
-        projects.forEach((_, i) => {
-            const dot = document.createElement('button');
-            dot.className = `slider-dot ${i === currentIndex ? 'active' : ''}`;
-            dot.setAttribute('aria-label', `Ir al proyecto ${i + 1}`);
-            dot.addEventListener('click', () => {
-                currentIndex = i;
-                updateSlider();
-            });
-            dotsContainer.appendChild(dot);
-        });
-    }
-    
-    // Navigation handlers
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateSlider();
-            }
-        });
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            if (currentIndex < projects.length - 1) {
-                currentIndex++;
-                updateSlider();
-            }
-        });
-    }
-    
-    // Scroll sync
-    let scrollTimeout;
-    slider.addEventListener('scroll', () => {
-        if (!checkMobile()) return;
-        
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            const newIndex = Math.round(slider.scrollLeft / slider.offsetWidth);
-            if (newIndex !== currentIndex) {
-                currentIndex = newIndex;
-                updateDots();
-                
-                // Update buttons
-                if (prevBtn && nextBtn) {
-                    prevBtn.disabled = currentIndex === 0;
-                    nextBtn.disabled = currentIndex >= projects.length - 1;
-                }
-            }
-        }, 100);
-    });
-    
-    // Initialize if mobile
-    if (checkMobile()) {
-        updateDots();
-        if (prevBtn) prevBtn.disabled = true;
-    }
-    
-    // Resize handler
-    window.addEventListener('resize', () => {
-        if (checkMobile()) {
-            currentIndex = 0;
-            updateSlider();
-        } else {
-            if (dotsContainer) dotsContainer.innerHTML = '';
-        }
-    });
+
+    if (skillsGrid) autoScroll(skillsGrid, 4000);
+    if (projectsGrid) autoScroll(projectsGrid, 5000);
 }
